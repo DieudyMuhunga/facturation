@@ -1,32 +1,30 @@
 <?php
-include("../../includes/header.php");
-require_once("../../includes/fonctions-factures.php");
+/**
+ * calcul.php — fonctions de calcul pour la facturation.
+ * Ce fichier est inclus par les autres fichiers du module facturation.
+ */
 
-$total_ht = 0;
+require_once '../../config/config.php';
 
-foreach ($_SESSION['facture'] as $ligne) {
-    $total_ht += $ligne['total'];
+/**
+ * Calcule total HT, TVA et total TTC à partir d'un tableau de lignes.
+ *
+ * @param  array $lignes  Tableau de lignes : chaque ligne a 'prix_unitaire' et 'quantite'.
+ * @return array          ['total_ht', 'tva', 'total_ttc']
+ */
+function calculer_facture(array $lignes) {
+    $total_ht = 0.0;
+    foreach ($lignes as $ligne) {
+        $pu  = isset($ligne['prix_unitaire']) ? floatval($ligne['prix_unitaire']) : 0;
+        $qte = isset($ligne['quantite'])      ? intval($ligne['quantite'])        : 0;
+        $total_ht += $pu * $qte;
+    }
+    $tva       = $total_ht * TVA;
+    $total_ttc = $total_ht + $tva;
+
+    return [
+        'total_ht'  => round($total_ht,  2),
+        'tva'       => round($tva,        2),
+        'total_ttc' => round($total_ttc,  2),
+    ];
 }
-
-$tva = $total_ht * 0.18;
-$total_ttc = $total_ht + $tva;
-
-$facture = [
-    "date" => date("Y-m-d"),
-    "heure" => date("H:i:s"),
-    "articles" => $_SESSION['facture'],
-    "total_ht" => $total_ht,
-    "tva" => $tva,
-    "total_ttc" => $total_ttc
-];
-
-// ✅ sauvegarde via fonction
-enregistrerFacture($facture);
-
-// vider session
-$_SESSION['facture'] = [];
-
-// redirection
-header("Location: afficher-facture.php");
-exit;
-?>

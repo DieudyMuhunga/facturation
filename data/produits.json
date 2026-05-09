@@ -1,62 +1,32 @@
 [
     {
-        "code_barre": "1234567890",
-        "nom": "produit 1",
-        "prix_unitaire_ht": 100,
-        "quantite_stock": 10
+        "code_barre": "974678346",
+        "nom": "vitalo",
+        "prix": 3500,
+        "quantite": 10
     },
     {
-        "code_barre": "123456789",
-        "nom": "produit 2",
-        "prix_unitaire_ht": 100,
-        "quantite_stock": 10
+        "code_barre": "10102020",
+        "nom": "COCA COLA",
+        "prix": 2500,
+        "quantite": 10
     },
     {
-        "code_barre": "12345",
-        "nom": "jus",
-        "prix_unitaire_ht": 50,
-        "quantite_stock": 1
+        "code_barre": "6046000006837",
+        "nom": "Eden",
+        "prix": 2000,
+        "quantite": 9
     },
     {
-        "code_barre": null,
-        "nom": null,
-        "prix_unitaire_ht": 0,
-        "date_expriation": null,
-        "quantite_stock": 0
+        "code_barre": "8791920011055",
+        "nom": "Eau SWISTA 750ml",
+        "prix": 500,
+        "quantite": 5
     },
     {
-        "code_barre": "1234567891",
-        "nom": "eau",
-        "prix_unitaire_ht": 100,
-        "date_expiration": "0227-04-23",
-        "quantite_stock": 2
-    },
-    {
-        "code_barre": "123",
-        "nom": "savon",
-        "prix_unitaire_ht": 500,
-        "date_expiration": "0007-04-27",
-        "quantite_stock": 2
-    },
-    {
-        "code_barre": "1234",
-        "nom": "eau",
-        "prix_unitaire_ht": 1000,
-        "date_expiration": "2027-04-27",
-        "quantite_stock": 1
-    },
-    {
-        "code_barre": "1234567892",
-        "nom": "produit 3",
-        "prix_unitaire_ht": 100,
-        "date_expiration": "2026-04-01",
-        "quantite_stock": 5
-    },
-    {
-        "code_barre": "24680",
-        "nom": "Pain",
-        "prix_unitaire_ht": 200,
-        "date_expiration": "2027-04-29",
-        "quantite_stock": 10
+        "code_barre": "07227777075509",
+        "nom": "america",
+        "prix": 500,
+        "quantite": 10
     }
 ]

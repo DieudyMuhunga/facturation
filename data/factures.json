@@ -1,87 +1,78 @@
 [
     {
-        "date": "2026-04-28",
-        "heure": "02:43:19",
-        "articles": [
+        "id": "FAC-20260506-1778084300",
+        "date": "06\/05\/2026 18:18",
+        "vendeur": "Administrateur",
+        "lignes": [
             {
-                "nom": "produit 2",
-                "prix": 100,
-                "quantite": 1,
-                "total": 100
-            },
-            {
-                "nom": "produit 2",
-                "prix": 100,
-                "quantite": 1,
-                "total": 100
-            },
-            {
-                "nom": "produit 2",
-                "prix": 100,
-                "quantite": 1,
-                "total": 100
+                "code_barre": "974678346",
+                "nom": "vitalo",
+                "prix_unitaire": 3500,
+                "quantite": 10
             }
         ],
-        "total_ht": 300,
-        "tva": 54,
-        "total_ttc": 354
+        "total_ht": 35000,
+        "tva": 6300,
+        "total_ttc": 41300
     },
     {
-        "date": "2026-04-28",
-        "heure": "03:16:28",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-28",
-        "heure": "03:33:56",
-        "articles": [
+        "id": "FAC-20260506-1778085906",
+        "date": "06\/05\/2026 18:45",
+        "vendeur": "caissier",
+        "lignes": [
             {
-                "nom": "produit 2",
-                "prix": null,
-                "quantite": 2,
-                "total": 0
+                "code_barre": "10102020",
+                "nom": "COCA COLA",
+                "prix_unitaire": 2500,
+                "quantite": 5
             }
         ],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
+        "total_ht": 12500,
+        "tva": 2250,
+        "total_ttc": 14750
     },
     {
-        "date": "2026-04-28",
-        "heure": "03:34:58",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-28",
-        "heure": "03:44:48",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-28",
-        "heure": "04:08:01",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-28",
-        "heure": "04:18:01",
-        "articles": [
+        "id": "FAC-20260506-1778087682",
+        "date": "06\/05\/2026 19:14",
+        "vendeur": "caissier",
+        "lignes": [
             {
-                "nom": "eau",
-                "prix": 1000,
-                "quantite": 1,
-                "total": 1000
+                "code_barre": "6046000006837",
+                "nom": "Eden",
+                "prix_unitaire": 2000,
+                "quantite": 1
+            }
+        ],
+        "total_ht": 2000,
+        "tva": 360,
+        "total_ttc": 2360
+    },
+    {
+        "id": "FAC-20260506-1778097128",
+        "date": "06\/05\/2026 21:52",
+        "vendeur": "Administrateur",
+        "lignes": [
+            {
+                "code_barre": "8791920011055",
+                "nom": "Eau SWISTA 750ml",
+                "prix_unitaire": 500,
+                "quantite": 1
+            }
+        ],
+        "total_ht": 500,
+        "tva": 90,
+        "total_ttc": 590
+    },
+    {
+        "id": "FAC-20260506-1778097394",
+        "date": "06\/05\/2026 21:56",
+        "vendeur": "Administrateur",
+        "lignes": [
+            {
+                "code_barre": "8791920011055",
+                "nom": "Eau SWISTA 750ml",
+                "prix_unitaire": 500,
+                "quantite": 2
             }
         ],
         "total_ht": 1000,
@@ -89,43 +80,35 @@
         "total_ttc": 1180
     },
     {
-        "date": "2026-04-28",
-        "heure": "04:32:59",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
+        "id": "FAC-20260506-1778099959",
+        "date": "06\/05\/2026 22:39",
+        "vendeur": "Administrateur",
+        "lignes": [
+            {
+                "code_barre": "8791920011055",
+                "nom": "Eau SWISTA 750ml",
+                "prix_unitaire": 500,
+                "quantite": 1
+            }
+        ],
+        "total_ht": 500,
+        "tva": 90,
+        "total_ttc": 590
     },
     {
-        "date": "2026-04-28",
-        "heure": "04:37:44",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-28",
-        "heure": "04:40:14",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-29",
-        "heure": "11:58:43",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
-    },
-    {
-        "date": "2026-04-29",
-        "heure": "11:58:59",
-        "articles": [],
-        "total_ht": 0,
-        "tva": 0,
-        "total_ttc": 0
+        "id": "FAC-20260506-1778103953",
+        "date": "06\/05\/2026 23:45",
+        "vendeur": "Administrateur",
+        "lignes": [
+            {
+                "code_barre": "8791920011055",
+                "nom": "Eau SWISTA 750ml",
+                "prix_unitaire": 500,
+                "quantite": 1
+            }
+        ],
+        "total_ht": 500,
+        "tva": 90,
+        "total_ttc": 590
     }
 ]

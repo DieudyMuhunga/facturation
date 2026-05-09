@@ -1,190 +1,292 @@
 <?php
-include("../../includes/header.php");
-require_once('../../includes/fonctions-factures.php');
+require_once '../../auth/session.php';
+require_once '../../config/config.php';
+require_once '../../includes/fonctions-produits.php';
+require_once 'calcul.php';
 
-if (!isset($_SESSION['facture'])) {
+if (!isset($_SESSION['facture']) || !is_array($_SESSION['facture'])) {
     $_SESSION['facture'] = [];
 }
 
+$erreur = '';
 
-// 🔴 SUPPRIMER PRODUIT
-if (isset($_POST['supprimer'])) {
-    $index = $_POST['supprimer'];
-    unset($_SESSION['facture'][$index]);
-    $_SESSION['facture'] = array_values($_SESSION['facture']);
+// Vider la facture
+if (isset($_GET['action']) && $_GET['action'] === 'vider') {
+    $_SESSION['facture'] = [];
+    header('Location: nouvelle-facture.php');
+    exit;
 }
 
-// 🟢 AJOUT PRODUIT
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ajouter'])) {
+// Retirer une ligne
+if (isset($_GET['action']) && $_GET['action'] === 'retirer' && isset($_GET['index'])) {
+    $index = intval($_GET['index']);
+    if (isset($_SESSION['facture'][$index])) {
+        array_splice($_SESSION['facture'], $index, 1);
+    }
+    header('Location: nouvelle-facture.php');
+    exit;
+}
 
-    $code = $_POST['code_barre'] ?? '';
-    $quantite = isset($_POST['quantite']) ? (int)$_POST['quantite'] : 0;
+// Ajouter un produit
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $code_barre = isset($_POST['code_barre']) ? trim($_POST['code_barre']) : '';
+    $quantite   = isset($_POST['quantite']) ? trim($_POST['quantite']) : '';
 
-    if (!empty($code) && $quantite > 0) {
+    if ($code_barre === '' || $quantite === '') {
+        $erreur = 'Veuillez renseigner le code barre et la quantite.';
+    } elseif (!ctype_digit($quantite) || intval($quantite) <= 0) {
+        $erreur = 'La quantite doit etre un entier superieur a 0.';
+    } else {
+        $produits = lire_produits();
+        $produit = trouver_produit_par_code($produits, $code_barre);
 
-        $data = file_get_contents($fichier);
-        $produits = json_decode($data, true);
-
-        foreach ($produits as $index => $produit) {
-
-            if ($produit['code_barre'] == $code) {
-
-                if ($produit['quantite_stock'] < $quantite) {
-                    echo "Stock insuffisant<br>";
+        if ($produit === null) {
+            $erreur = 'Produit introuvable (code : ' . htmlspecialchars($code_barre) . ').';
+        } elseif ($produit['quantite'] < intval($quantite)) {
+            $erreur = 'Stock insuffisant. Disponible : ' . $produit['quantite'] . '.';
+        } else {
+            $deja = false;
+            foreach ($_SESSION['facture'] as &$ligne) {
+                if ($ligne['code_barre'] === $code_barre) {
+                    $nv_qte = $ligne['quantite'] + intval($quantite);
+                    if ($produit['quantite'] < $nv_qte) {
+                        $erreur = 'Stock insuffisant pour cette quantite totale. Disponible : ' . $produit['quantite'] . '.';
+                    } else {
+                        $ligne['quantite'] = $nv_qte;
+                    }
+                    $deja = true;
                     break;
                 }
+            }
+            unset($ligne);
 
-                $prix = $produit['prix_unitaire_ht'];
-                $total = $prix * $quantite;
-
+            if (!$deja && $erreur === '') {
                 $_SESSION['facture'][] = [
-                    "nom" => $produit['nom'],
-                    "prix" => $prix,
-                    "quantite" => $quantite,
-                    "total" => $total
+                    'code_barre'    => $produit['code_barre'],
+                    'nom'           => $produit['nom'],
+                    'prix_unitaire' => $produit['prix'],
+                    'quantite'      => intval($quantite),
                 ];
-
-                $produits[$index]['quantite_stock'] -= $quantite;
-
-                file_put_contents($fichier, json_encode($produits, JSON_PRETTY_PRINT));
-
-                break;
             }
         }
     }
 }
 
-// 🔵 VALIDER FACTURE
-if (isset($_POST['valider'])) {
-
-    $data = file_get_contents($fichier_factures);
-    $factures = json_decode($data, true);
-
-    if ($factures == null) {
-        $factures = [];
-    }
-
-    $total_ht = 0;
-
-    foreach ($_SESSION['facture'] as $ligne) {
-        $total_ht += $ligne['total'];
-    }
-
-    $tva = $total_ht * 0.18;
-    $total_ttc = $total_ht + $tva;
-
-    $facture = [
-        "date" => date("Y-m-d"),
-        "heure" => date("H:i:s"),
-        "articles" => $_SESSION['facture'],
-        "total_ht" => $total_ht,
-        "tva" => $tva,
-        "total_ttc" => $total_ttc
-    ];
-
-    $factures[] = $facture;
-
-    file_put_contents($fichier_factures, json_encode($factures, JSON_PRETTY_PRINT));
-
-    $_SESSION['facture'] = [];
-
-    echo "<b>Facture enregistrée avec succès</b><br><br>";
-}
+$lignes = $_SESSION['facture'];
+$totaux = calculer_facture($lignes);
 ?>
-
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
-    <title>Facturation</title>
-</head>
-<script src="https://unpkg.com/html5-qrcode"></script>
-
-<div id="reader" style="width:300px"></div>
-
-<script src="https://unpkg.com/html5-qrcode@2.3.8/minified/html5-qrcode.min.js"></script>
-<script>
-function startScanner() {
-    const html5QrCode = new Html5Qrcode("reader");
-
-    html5QrCode.start(
-        { facingMode: "environment" },
-        { fps: 10, qrbox: 250 },
-        function(decodedText) {
-            document.querySelector('input[name="code_barre"]').value = decodedText;
-            html5QrCode.stop();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nouvelle facture — Facturation</title>
+    <script src="https://unpkg.com/@zxing/library@0.19.2/umd/index.min.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+        header {
+            background: linear-gradient(90deg, #1e3a5f, #2563eb);
+            color: #fff;
+            padding: 0 24px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
         }
-    ).catch(err => console.log(err));
-}
-</script>
-
-<button type="button" onclick="startScanner()">Scanner</button>
+        header a { color: rgba(255,255,255,.8); text-decoration: none; font-size: 14px; }
+        header a:hover { color: #fff; }
+        main {
+            max-width: 980px;
+            margin: 28px auto;
+            padding: 0 18px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 22px;
+        }
+        @media(max-width: 680px) { main { grid-template-columns: 1fr; } }
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,.08);
+            padding: 26px;
+        }
+        h2 { font-size: 16px; color: #1e3a5f; margin-bottom: 18px; font-weight: 700; }
+        label { display: block; font-size: 13px; color: #555; margin-bottom: 5px; font-weight: 600; }
+        input[type=text], input[type=number] {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 14px;
+            margin-bottom: 14px;
+            transition: border-color .2s;
+        }
+        input:focus { outline: none; border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+        .input-scanner {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+        .input-scanner input { margin-bottom: 0; flex: 1; }
+        .btn {
+            display: inline-block;
+            padding: 9px 16px;
+            border-radius: 7px;
+            font-size: 13px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: opacity .15s;
+            white-space: nowrap;
+        }
+        .btn:hover { opacity: .88; }
+        .btn-primaire { background: #2563eb; color: #fff; }
+        .btn-vert { background: #16a34a; color: #fff; }
+        .btn-orange { background: #ea580c; color: #fff; }
+        .btn-secondaire { background: #e5e7eb; color: #374151; }
+        .btn-full { width: 100%; display: block; text-align: center; margin-top: 10px; padding: 11px; }
+        #video-scanner {
+            width: 100%;
+            max-height: 220px;
+            border-radius: 8px;
+            background: #000;
+            display: none;
+            margin-bottom: 10px;
+            object-fit: cover;
+        }
+        .scanner-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        select#select-camera {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 7px;
+            font-size: 13px;
+        }
+        .erreur { background: #fee2e2; color: #b91c1c; padding: 11px 14px; border-radius: 7px; font-size: 13px; margin-bottom: 14px; border-left: 3px solid #b91c1c; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #f0f4ff; color: #1e3a5f; padding: 9px 10px; text-align: left; font-size: 12px; }
+        td { padding: 8px 10px; border-bottom: 1px solid #f0f2f5; }
+        tr:last-child td { border-bottom: none; }
+        a.retirer { color: #dc2626; text-decoration: none; font-size: 18px; line-height: 1; }
+        a.retirer:hover { color: #b91c1c; }
+        .totaux { margin-top: 16px; border-top: 2px solid #e5e7eb; padding-top: 12px; }
+        .totaux .ligne { display: flex; justify-content: space-between; padding: 3px 0; font-size: 14px; }
+        .totaux .ttc { font-size: 17px; font-weight: 700; color: #2563eb; margin-top: 6px; padding-top: 8px; border-top: 1px solid #e5e7eb; }
+        .vide { text-align: center; color: #9ca3af; padding: 30px 0; font-size: 14px; }
+    </style>
+</head>
 <body>
+<header>
+    <strong>🧾 Nouvelle facture</strong>
+    <nav>
+        <a href="../../modules/produits/liste.php" style="margin-right:16px;">📦 Produits</a>
+        <a href="../../index.php">← Accueil</a>
+    </nav>
+</header>
 
-<h2>Ajouter un produit</h2>
+<main>
+    <div class="card">
+        <h2>Ajouter un produit</h2>
 
-<form method="POST" action="calcul.php">
-    Code barre : <input type="text" name="code_barre"><br><br>
-    Quantité : <input type="number" name="quantite"><br><br>
-    <button type="submit" name="ajouter">Ajouter</button>
-</form>
+        <?php if ($erreur !== ''): ?>
+            <div class="erreur">⚠️ <?= htmlspecialchars($erreur) ?></div>
+        <?php endif; ?>
 
-<hr>
+        <div class="scanner-controls">
+            <button type="button" id="btn-scanner"      class="btn btn-orange">📷 Scanner</button>
+            <button type="button" id="btn-stop-scanner" class="btn btn-secondaire" style="display:none;">⏹ Arreter</button>
+            <select id="select-camera" title="Choisir la camera"></select>
+        </div>
 
-<?php if (!empty($_SESSION['facture'])): ?>
+        <video id="video-scanner" playsinline></video>
 
-<h2>Facture</h2>
+        <form method="POST" action="" id="form-ajout">
+            <label for="code_barre">Code barre</label>
+            <div class="input-scanner">
+                <input type="text"
+                       id="code_barre"
+                       name="code_barre"
+                       placeholder="Saisir ou scanner..."
+                       autocomplete="off"
+                       required>
+            </div>
 
-<table border="1">
-<tr>
-    <th>Produit</th>
-    <th>Prix</th>
-    <th>Quantité</th>
-    <th>Total</th>
-    <th>Action</th>
-</tr>
+            <label for="quantite">Quantite</label>
+            <input type="number" id="quantite" name="quantite" min="1" value="1" required>
 
-<?php
-$total_ht = 0;
-
-foreach ($_SESSION['facture'] as $index => $ligne):
-    $total_ht += $ligne['total'];
-?>
-<tr>
-    <td><?= $ligne['nom'] ?></td>
-    <td><?= $ligne['prix'] ?></td>
-    <td><?= $ligne['quantite'] ?></td>
-    <td><?= $ligne['total'] ?></td>
-    <td>
-        <form method="POST">
-            <input type="hidden" name="supprimer" value="<?= $index ?>">
-            <button>❌</button>
+            <button type="submit" class="btn btn-primaire btn-full">+ Ajouter a la facture</button>
         </form>
-    </td>
-</tr>
-<?php endforeach; ?>
+    </div>
 
-</table>
+    <div class="card">
+        <h2>Facture en cours
+            <span style="font-size:12px;color:#9ca3af;font-weight:400;">(<?= count($lignes) ?> ligne<?= count($lignes) > 1 ? 's' : '' ?>)</span>
+        </h2>
 
-<?php
-$tva = $total_ht * 0.18;
-$total_ttc = $total_ht + $tva;
-?>
+        <?php if (empty($lignes)): ?>
+            <p class="vide">Aucun produit ajoute.</p>
+        <?php else: ?>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Produit</th>
+                        <th style="text-align:right">P.U.</th>
+                        <th style="text-align:right">Qte</th>
+                        <th style="text-align:right">Total</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                <?php foreach ($lignes as $i => $ligne): ?>
+                    <tr>
+                        <td><?= htmlspecialchars($ligne['nom']) ?></td>
+                        <td style="text-align:right"><?= number_format($ligne['prix_unitaire'], 2, ',', ' ') ?></td>
+                        <td style="text-align:right"><?= intval($ligne['quantite']) ?></td>
+                        <td style="text-align:right;font-weight:600;"><?= number_format($ligne['prix_unitaire'] * $ligne['quantite'], 2, ',', ' ') ?></td>
+                        <td style="text-align:center;">
+                            <a class="retirer"
+                               href="?action=retirer&index=<?= $i ?>"
+                               title="Retirer">×</a>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
 
-<h3>Total HT : <?= $total_ht ?> CDF</h3>
-<h3>TVA : <?= $tva ?> CDF</h3>
-<h3>Total TTC : <?= $total_ttc ?> CDF</h3>
+            <div class="totaux">
+                <div class="ligne"><span>Total HT</span><span><?= number_format($totaux['total_ht'], 2, ',', ' ') ?> CDF</span></div>
+                <div class="ligne"><span>TVA (<?= TVA * 100 ?>%)</span><span><?= number_format($totaux['tva'], 2, ',', ' ') ?> CDF</span></div>
+                <div class="ligne ttc"><span>Total TTC</span><span><?= number_format($totaux['total_ttc'], 2, ',', ' ') ?> CDF</span></div>
+            </div>
 
-<div id="scanner" style="width:300px;"></div>
+            <a class="btn btn-vert btn-full" href="afficher-facture.php">✅ Valider et afficher la facture</a>
+            <a class="btn btn-secondaire btn-full"
+               href="?action=vider"
+               onclick="return confirm('Vider toute la facture en cours ?')"
+               style="margin-top:8px;">🗑 Vider la facture</a>
+        <?php endif; ?>
+    </div>
+</main>
 
-<form method="POST">
-    <button name="valider">Valider la facture</button>
-</form>
-
-<?php endif; ?>
-
-<br>
-<a href="../produits/liste.php">📄 Voir les factures</a>
-
-<?php include("../../includes/footer.php");?>
+<script src="../../js/scanner.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Scanner.init('video-scanner', 'code_barre', {
+        btnDemarrer  : 'btn-scanner',
+        btnArreter   : 'btn-stop-scanner',
+        selectCamera : 'select-camera',
+        autoSubmit   : true
+    });
+});
+</script>
 </body>
 </html>

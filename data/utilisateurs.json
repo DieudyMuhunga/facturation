@@ -1,6 +1,23 @@
 [
     {
-        "username": "admin",
-        "password": "12345"
+        "identifiant": "admin",
+        "mot_de_passe": "1234",
+        "role": "super_admin",
+        "nom_complet": "Administrateur",
+        "actif": true
+    },
+    {
+        "identifiant": "caissier",
+        "mot_de_passe": "1235",
+        "role": "caissier",
+        "nom_complet": "caissier",
+        "actif": true
+    },
+    {
+        "identifiant": "manager",
+        "mot_de_passe": "1236",
+        "role": "manager",
+        "nom_complet": "manager",
+        "actif": true
     }
 ]
